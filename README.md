@@ -124,7 +124,7 @@ Note: The script automatically configures GPG_TTY in your shell configuration fi
 ## What the Script Does
 
 1. Copies SSH keys to the appropriate location
-2. Configures SSH for the specified GitHub account
+2. Configures SSH for the specified Git account
 3. Imports the GPG key
 4. Sets up Git configuration for commit signing
 5. Verifies the setup by testing SSH connection
