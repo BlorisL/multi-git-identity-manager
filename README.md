@@ -130,3 +130,7 @@ Note: The script automatically configures GPG_TTY in your shell configuration fi
 3. Imports the GPG key
 4. Sets up Git configuration for commit signing
 5. Verifies the setup by testing SSH connection
+
+## Support me
+
+[Share with me a cup of tea](https://www.buymeacoffee.com/bloris) ☕
