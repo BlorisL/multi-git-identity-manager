@@ -7,6 +7,7 @@ GIT_HOST="github.com"
 GIT_NAME=""
 GIT_EMAIL=""
 GIT_SCOPE="local"
+CACHE_PASSPHRASE="no" # Default: do not enable passphrase caching
 
 # Parse named parameters
 while [ $# -gt 0 ]; do
@@ -35,9 +36,13 @@ while [ $# -gt 0 ]; do
             GIT_SCOPE="$2"
             shift 2
             ;;
+        --cache-passphrase)
+            CACHE_PASSPHRASE="yes"
+            shift 1
+            ;;
         *)
             echo "Unknown parameter: $1"
-            echo "Usage: $0 --backup-dir <dir> --git-alias <alias> [--git-host <host>] --git-name <name> --git-email <email> [--scope <scope>]"
+            echo "Usage: $0 --backup-dir <dir> --git-alias <alias> [--git-host <host>] --git-name <name> --git-email <email> [--scope <scope>] [--cache-passphrase]"
             exit 1
             ;;
     esac
@@ -46,7 +51,7 @@ done
 # Validate required parameters
 if [ -z "$PORTABLE_DIR" ] || [ -z "$SSH_ALIAS" ] || [ -z "$GIT_NAME" ] || [ -z "$GIT_EMAIL" ]; then
     echo "Error: Missing required parameters"
-    echo "Usage: $0 --backup-dir <dir> --git-alias <alias> [--git-host <host>] --git-name <name> --git-email <email> [--scope <scope>]"
+    echo "Usage: $0 --backup-dir <dir> --git-alias <alias> [--git-host <host>] --git-name <name> --git-email <email> [--scope <scope>] [--cache-passphrase]"
     exit 1
 fi
 
@@ -112,13 +117,26 @@ mv "${TEMP_CONFIG}" "${SSH_MAIN_CONFIG}"
 chmod 600 "${SSH_MAIN_CONFIG}"
 
 # Configure SSH for the specified alias, if needed
-EXPECTED_SSH_CONFIG=$(cat <<EOL
+if [ "$CACHE_PASSPHRASE" = "yes" ]; then
+    EXPECTED_SSH_CONFIG=$(cat <<EOL
+Host ${SSH_ALIAS}
+    HostName ${GIT_HOST}
+    User git
+    IdentityFile ${DIR_SSH_KEY}${DIR_BACKUP_SSH_FILE}
+    IdentitiesOnly yes
+    AddKeysToAgent yes
+EOL
+)
+else
+    EXPECTED_SSH_CONFIG=$(cat <<EOL
 Host ${SSH_ALIAS}
     HostName ${GIT_HOST}
     User git
     IdentityFile ${DIR_SSH_KEY}${DIR_BACKUP_SSH_FILE}
 EOL
 )
+fi
+
 if [ ! -f "${SSH_CONFIG_FILE}" ] || [ "$(cat "${SSH_CONFIG_FILE}")" != "${EXPECTED_SSH_CONFIG}" ]; then
     echo "Creating or updating ${SSH_CONFIG_FILE}"
     echo "${EXPECTED_SSH_CONFIG}" > "${SSH_CONFIG_FILE}"
@@ -222,4 +240,9 @@ if [ "$GIT_SCOPE" = "local" ]; then
     echo "2. Navigate to the repository: cd repo"
     echo "3. Configure signing: git config --local include.path ${GITCONFIG}"
     echo "Alternatively, manually add the settings from ${GITCONFIG} to <repository>/.git/config under the [user] and [commit] sections."
+fi
+if [ "$CACHE_PASSPHRASE" = "yes" ]; then
+    echo "SSH passphrase caching is enabled via AddKeysToAgent."
+    echo "The passphrase will be requested once per session and cached in ssh-agent."
+    echo "To disable, remove 'AddKeysToAgent yes' from ${SSH_CONFIG_FILE}."
 fi

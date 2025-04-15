@@ -30,7 +30,7 @@ Create a backup directory with the following structure:
 
 ```bash
 ./setup.sh --backup-dir <backup-dir> --git-alias <git-alias> [--git-host <git-host>] \
-           --git-name "<git-name>" --git-email "<git-email>" [--scope <scope>]
+           --git-name "<git-name>" --git-email "<git-email>" [--scope <scope>] [--cache-passphrase]
 ```
 
 ### Parameters
@@ -41,17 +41,19 @@ Create a backup directory with the following structure:
 * `--git-name`: Your full name for Git commits
 * `--git-email`: Your email address for Git commits
 * `--scope`: Either 'global' or 'local' (default: local)
+* `--cache-passphrase`: Enable SSH key passphrase caching via ssh-agent
 
 ### Examples
 
 ```bash
-# GitLab configuration
+# GitLab configuration with passphrase caching
 ./setup.sh --backup-dir /path/to/backup \
           --git-alias work-gitlab \
           --git-host gitlab.com \
           --git-name "John Doe" \
           --git-email "john@work.com" \
-          --scope local
+          --scope local \
+          --cache-passphrase
 
 # GitHub configuration
 ./setup.sh --backup-dir /path/to/backup \
