@@ -18,25 +18,29 @@ This script automates the setup of SSH keys and GPG signing for Git hosting serv
 Create a backup directory with the following structure:
 ```
 <backup-dir>/
-└── <git-alias>/
+└── <host-domain>-<ssh-alias>/
     ├── ssh/
-    │   ├── <git-alias>-sign
-    │   └── <git-alias>-sign.pub
+    │   ├── <host-domain>-<ssh-alias>-sign
+    │   └── <host-domain>-<ssh-alias>-sign.pub
     └── gpg/
-        └── <git-alias>-private-key.gpg
+        └── <host-domain>-<ssh-alias>-private-key.gpg
 ```
+Where:
+- `<host-domain>` is derived from `--git-host` by removing the last part and replacing dots with dashes, all lowercase (e.g. `foo.bar.com` → `foo-bar`)
+- `<ssh-alias>` is the value you provide to `--ssh-alias`
+- Example: if `--git-host foo.bar.com` and `--ssh-alias dev`, then the directory will be `foo-bar-dev`
 
 ## Usage
 
 ```bash
-./setup.sh --backup-dir <backup-dir> --git-alias <git-alias> [--git-host <git-host>] \
+./setup.sh --backup-dir <backup-dir> --ssh-alias <ssh-alias> [--git-host <git-host>] \
            --git-name "<git-name>" --git-email "<git-email>" [--scope <scope>] [--cache-passphrase]
 ```
 
 ### Parameters
 
 * `--backup-dir`: Path to your backup directory containing SSH and GPG keys
-* `--git-alias`: Alias for the Git account (used in SSH config)
+* `--ssh-alias`: Alias for the SSH config (used in SSH config and as Git remote host)
 * `--git-host`: Git hosting service domain (default: github.com)
 * `--git-name`: Your full name for Git commits
 * `--git-email`: Your email address for Git commits
@@ -46,9 +50,8 @@ Create a backup directory with the following structure:
 ### Examples
 
 ```bash
-# GitLab configuration with passphrase caching
 ./setup.sh --backup-dir /path/to/backup \
-          --git-alias work-gitlab \
+          --ssh-alias work-gitlab \
           --git-host gitlab.com \
           --git-name "John Doe" \
           --git-email "john@work.com" \
@@ -76,20 +79,12 @@ When using local configuration:
 
 1. Clone repositories using your SSH alias:
 ```bash
-# For GitHub
-git clone <git-alias>:username/repository.git
-
-# For GitLab
-git clone <git-alias>:username/repository.git
-
-# For custom Git servers
-# First, configure the host in your SSH config file with the correct hostname
-git clone <git-alias>:username/repository.git
+git clone <ssh-alias>:username/repository.git
 ```
 
 2. Inside the cloned repository, enable GPG signing:
 ```bash
-git config --local include.path ~/.gitconfig-github-<git-alias>
+git config --local include.path ~/.gitconfig-<host>-<ssh-alias>
 ```
 
 ## Configuring Existing Repositories
@@ -110,6 +105,16 @@ echo "test" | gpg --armor --clear-sign --default-key <git-email>
 
 # Create a test signed commit
 git commit --allow-empty -m "Test signed commit."
+```
+
+## Updating Existing Repositories
+
+To update an existing repository to use your new SSH alias and configuration:
+
+```bash
+cd <your-repo>
+git remote set-url origin <host-domain>-<ssh-alias>:<git-user>/<git-project>.git
+git config --local include.path ~/.gitconfig-<host-domain>-<ssh-alias>
 ```
 
 Note: The script automatically configures GPG_TTY in your shell configuration files (.bashrc and .zshrc) and Git config. If you're still experiencing GPG signing issues after installation, try:
