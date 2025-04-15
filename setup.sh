@@ -159,6 +159,9 @@ if [ "$GIT_SCOPE" = "global" ]; then
     signingkey = ${GPG_KEY_ID}
 [commit]
     gpgsign = true
+[gpg]
+    program = gpg
+    tty = $(tty)
 EOL
 else
     echo "Configuring Git locally (creating template)..."
@@ -169,8 +172,21 @@ else
     signingkey = ${GPG_KEY_ID}
 [commit]
     gpgsign = true
+[gpg]
+    program = gpg
+    tty = $(tty)
 EOL
 fi
+
+# Add GPG_TTY to shell configuration if not already present
+for RC_FILE in "${HOME}/.bashrc" "${HOME}/.zshrc"; do
+    if [ -f "${RC_FILE}" ]; then
+        if ! grep -q "export GPG_TTY" "${RC_FILE}"; then
+            echo -e "\n# GPG TTY for git commit signing\nexport GPG_TTY=\$(tty)" >> "${RC_FILE}"
+            echo "Added GPG_TTY export to ${RC_FILE}"
+        fi
+    fi
+done
 
 # Verify configuration
 if [ "$GIT_SCOPE" = "global" ]; then

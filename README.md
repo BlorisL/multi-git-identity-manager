@@ -103,15 +103,17 @@ git remote set-url origin <git-alias>:<git-user>/<git-project>.git
 
 3. Test GPG signing:
 ```bash
-# Set GPG TTY (add this to your shell configuration file)
-export GPG_TTY=$(tty)
-
 # Test GPG key
 echo "test" | gpg --armor --clear-sign --default-key <git-email>
 
 # Create a test signed commit
 git commit --allow-empty -m "Test signed commit."
 ```
+
+Note: The script automatically configures GPG_TTY in your shell configuration files (.bashrc and .zshrc) and Git config. If you're still experiencing GPG signing issues after installation, try:
+1. Sourcing your shell configuration: `source ~/.bashrc` (or `~/.zshrc`)
+2. Starting a new terminal session
+3. Manually running: `export GPG_TTY=$(tty)`
 
 ## Security Notes
 
