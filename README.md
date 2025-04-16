@@ -28,46 +28,57 @@ Create a backup directory with the following structure:
 Where:
 - `<host-domain>` is derived from `--git-host` by removing the last part and replacing dots with dashes, all lowercase (e.g. `foo.bar.com` → `foo-bar`)
 - `<ssh-alias>` is the value you provide to `--ssh-alias`
-- Example: if `--git-host foo.bar.com` and `--ssh-alias dev`, then the directory will be `foo-bar-dev`
+- The final Git alias will be `<host-domain>-<ssh-alias>` (e.g. if `--git-host=gitlab.com` and `--ssh-alias=work`, then `gitlab-work`)
 
 ## Usage
 
 ```bash
-./setup.sh --backup-dir <backup-dir> --ssh-alias <ssh-alias> [--git-host <git-host>] \
+# Create mode (default)
+./setup.sh [--mode create] [--backup-dir <dir>] --ssh-alias <ssh-alias> [--git-host <git-host>] \
            --git-name "<git-name>" --git-email "<git-email>" [--scope <scope>] [--cache-passphrase]
+
+# Remove mode
+./setup.sh --mode remove --ssh-alias <ssh-alias> [--git-host <git-host>] --git-email "<git-email>"
 ```
 
 ### Parameters
 
-* `--backup-dir`: Path to your backup directory containing SSH and GPG keys
+* `--mode`: Operation mode: 'create' or 'remove' (default: create)
+* `--backup-dir`: Path to your backup directory containing SSH and GPG keys (default: "backup")
 * `--ssh-alias`: Alias for the SSH config (used in SSH config and as Git remote host)
 * `--git-host`: Git hosting service domain (default: github.com)
 * `--git-name`: Your full name for Git commits
 * `--git-email`: Your email address for Git commits
 * `--scope`: Either 'global' or 'local' (default: local)
 * `--cache-passphrase`: Enable SSH key passphrase caching via ssh-agent
+* `--remove`: Remove configuration for specified host and SSH alias
 
 ### Examples
 
 ```bash
-./setup.sh --backup-dir /path/to/backup \
-          --ssh-alias work-gitlab \
+# Setup new configuration
+./setup.sh --mode create \
+          --ssh-alias work \
           --git-host gitlab.com \
           --git-name "John Doe" \
-          --git-email "john@work.com" \
-          --scope local \
-          --cache-passphrase
+          --git-email "john@work.com"
+
+# Remove existing configuration
+./setup.sh --mode remove \
+          --ssh-alias work-gitlab \
+          --git-host gitlab.com \
+          --git-email "john@work.com"
 
 # GitHub configuration
 ./setup.sh --backup-dir /path/to/backup \
-          --git-alias personal-github \
+          --ssh-alias personal \
           --git-name "John Doe" \
           --git-email "john@personal.com" \
           --scope global
 
 # Custom Git server
 ./setup.sh --backup-dir /path/to/backup \
-          --git-alias custom-git \
+          --ssh-alias custom-git \
           --git-host git.company.com \
           --git-name "John Doe" \
           --git-email "john@company.com"
@@ -77,23 +88,23 @@ Where:
 
 When using local configuration:
 
-1. Clone repositories using your SSH alias:
+1. Clone repositories using the full Git alias:
 ```bash
-git clone <ssh-alias>:username/repository.git
+git clone <host-domain>-<ssh-alias>:username/repository.git
 ```
 
 2. Inside the cloned repository, enable GPG signing:
 ```bash
-git config --local include.path ~/.gitconfig-<host>-<ssh-alias>
+git config --local include.path ~/.gitconfig-<host-domain>-<ssh-alias>
 ```
 
 ## Configuring Existing Repositories
 
 If you have existing repositories that you want to configure with the new Git identity:
 
-1. Update the remote URL to use the new SSH alias:
+1. Update the remote URL to use the full Git alias:
 ```bash
-git remote set-url origin <git-alias>:<git-user>/<git-project>.git
+git remote set-url origin <host-domain>-<ssh-alias>:username/repository.git
 ```
 
 2. Configure the local Git settings as described in the previous section.
